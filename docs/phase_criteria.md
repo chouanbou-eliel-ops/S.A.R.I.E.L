@@ -1,0 +1,69 @@
+# SARIEL — Critères de "Done" par Phase
+
+> Chaque critère doit être vérifiable en moins de 5 minutes, sans jugement subjectif de type "je pense que c'est prêt". Ce document sert aussi de preuve documentée de rigueur d'ingénierie pour le portfolio.
+
+---
+
+## Phase 1 — Noyau agentique en texte
+
+- [ ] L'agent répond à une requête en CLI en utilisant au moins 2 tools différents (web search + exécution Python) dans une même conversation, **sans intervention manuelle** entre les deux appels.
+- [ ] La mémoire simple (JSON/SQLite) persiste entre deux lancements du script : fermeture du terminal, relance, l'agent retrouve un fait donné en session précédente.
+- [ ] Capacité à expliquer, sans regarder le code, le déroulé du function calling brut : parsing de la requête du modèle → exécution du tool → renvoi du résultat → décision du modèle (continuer ou conclure).
+- [ ] Gestion d'erreur basique : si un tool échoue (ex. pas de connexion internet), l'agent ne crash pas — il informe l'utilisateur et reste utilisable.
+
+**Test de validation rapide (< 5 min) :**
+1. Lancer l'agent, poser une question nécessitant une recherche web puis un calcul Python dans le même échange → vérifier l'enchaînement sans intervention.
+2. Donner un fait à retenir, quitter, relancer, redemander ce fait.
+3. Couper le réseau, poser une question nécessitant le web → vérifier que l'agent répond proprement au lieu de crasher.
+
+---
+
+## Phase 2 — Outils étendus
+
+- [ ] L'agent peut lire ET écrire un fichier sur demande, sans corrompre son contenu (test : écrire, relire, comparer).
+- [ ] Au moins un appel à une API externe réelle (pas juste web search générique) fonctionne de bout en bout.
+- [ ] Système de permissions minimal : l'agent ne peut pas supprimer un fichier sans confirmation explicite de l'utilisateur.
+
+---
+
+## Phase 3 — Mémoire long terme
+
+- [ ] Un fait donné il y a au moins 10-15 sessions est retrouvé correctement via recherche vectorielle, sans halluciner un fait proche mais faux.
+- [ ] Moyen d'inspecter le contenu de la mémoire (pas une boîte noire totale) — au minimum un script qui dump les embeddings + texte associé.
+
+---
+
+## Phase 4 — Couche vocale
+
+- [ ] Cycle complet voix → texte → LLM → texte → voix fonctionne avec une latence jugée acceptable à l'usage réel.
+- [ ] **Seuil de latence fixé à l'avance :** < 3 secondes (à ajuster ici si besoin, mais avant les tests, pas après).
+
+---
+
+## Phase 5 — Wake word
+
+- [ ] Le wake word déclenche l'écoute dans un environnement avec bruit de fond réaliste (pas un silence de labo).
+- [ ] Taux de faux positifs jugé tolérable sur une session d'1h (seuil à définir avant test).
+
+---
+
+## Phase 6 — Domotique
+
+- [ ] Même en simulation, un ordre vocal ou texte déclenche une action simulée traçable dans un log.
+- [ ] Format de log conçu pour basculer vers du matériel réel sans réécrire la logique métier.
+
+---
+
+## Phase 7 — Dashboard
+
+- [ ] Depuis l'interface web, possibilité de voir l'historique d'une session passée.
+- [ ] Possibilité de déclencher manuellement un tool depuis le dashboard, sans repasser par la CLI.
+
+---
+
+## Historique des décisions techniques
+
+| Date | Décision | Justification |
+|------|----------|----------------|
+| 2026-08-16 | Recherche web : Tavily API | API pensée pour agents LLM, résultats JSON déjà nettoyés, 1000 requêtes/mois gratuites. Le scraping direct ajoute une complexité incidentielle (parsing HTML, blocage anti-bot) hors du critère de succès de la Phase 1 (tool-chaining, pas robustesse de parsing). Sert aussi de premier exemple d'intégration d'API externe réelle. |
+| _(à compléter)_ | LLM Phase 1 | _(à compléter)_ |

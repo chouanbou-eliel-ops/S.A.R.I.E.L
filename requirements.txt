@@ -1,0 +1,11 @@
+# LLM — à ajuster selon le fournisseur retenu
+anthropic>=0.40.0
+
+# Recherche web
+tavily-python>=0.5.0
+
+# Chargement des variables d'environnement
+python-dotenv>=1.0.0
+
+# Tests
+pytest>=8.0.0

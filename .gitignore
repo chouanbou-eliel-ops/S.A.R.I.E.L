@@ -1,0 +1,17 @@
+# Environnement
+.env
+venv/
+__pycache__/
+*.pyc
+
+# Données persistées
+data/*.json
+data/*.db
+!data/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
