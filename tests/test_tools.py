@@ -75,6 +75,35 @@ print(carre(7))
 
 
 # ---------------------------------------------------------------------
+# python_exec — intégration avec le filtre de sécurité (tools/safety.py)
+# ---------------------------------------------------------------------
+
+def test_python_exec_blocks_forbidden_import_before_running():
+    """
+    Vérifie que le code n'est jamais RÉELLEMENT exécuté : si le filtre
+    avait échoué à intercepter, ce code supprimerait ce fichier de test
+    lui-même (chemin volontairement absurde pour rendre l'effet visible
+    en cas de régression : os.remove() n'a aucune chance de s'exécuter
+    silencieusement sans qu'un test échoue quelque part).
+    """
+    result = python_exec({"code": "import os\nos.remove(__file__)"})
+    assert result.success is False
+    assert "filtre de sécurité" in result.error.lower() or "interdit" in result.error.lower()
+
+
+def test_python_exec_blocks_eval():
+    result = python_exec({"code": "eval('__import__(\"os\").system(\"echo test\")')"})
+    assert result.success is False
+
+
+def test_python_exec_legitimate_code_unaffected_by_filter():
+    """Le filtre ne doit pas gêner un usage normal du tool."""
+    result = python_exec({"code": "import math\nprint(math.factorial(5))"})
+    assert result.success is True
+    assert result.content == "120"
+
+
+# ---------------------------------------------------------------------
 # web_search (client Tavily mocké — pas d'appel réseau réel)
 # ---------------------------------------------------------------------
 
