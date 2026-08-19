@@ -48,10 +48,17 @@ class ToolSchema:
     """
     Description d'un tool au format attendu par l'API du LLM
     (nom, description, schéma JSON des paramètres).
+
+    `requires_confirmation` est lu par agent.py (voir tools/permissions.py) :
+    si True, l'agent interrompt la boucle avant exécution et demande une
+    confirmation explicite à l'utilisateur. Ce n'est PAS transmis à l'API
+    du LLM (absent de to_api_format) — c'est une politique locale, le
+    modèle n'a pas à savoir qu'elle existe pour bien fonctionner.
     """
     name: str
     description: str
     parameters: Dict[str, Any]  # JSON Schema standard (type, properties, required)
+    requires_confirmation: bool = False
 
     def to_api_format(self) -> Dict[str, Any]:
         """Convertit le schéma au format attendu par l'API Anthropic."""
