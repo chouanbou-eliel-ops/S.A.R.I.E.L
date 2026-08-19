@@ -29,6 +29,7 @@ import anthropic
 import config
 from memory import Memory
 from tools import memory_save as memory_save_tool
+from tools import permissions
 from tools.base import registry
 
 _SYSTEM_PROMPT_TEMPLATE = """Tu es SARIEL, un assistant IA personnel.
@@ -72,6 +73,22 @@ class Agent:
 
             if config.VERBOSE:
                 print(f"  [tool_call] {block.name}({block.input})")
+
+            tool = registry.get(block.name)
+            if tool is not None and tool.schema.requires_confirmation:
+                if not permissions.request_confirmation(block.name, block.input):
+                    tool_results.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": (
+                                "Action refusée par l'utilisateur : "
+                                "confirmation requise non accordée."
+                            ),
+                            "is_error": True,
+                        }
+                    )
+                    continue
 
             result = registry.execute(block.name, block.input)
 
