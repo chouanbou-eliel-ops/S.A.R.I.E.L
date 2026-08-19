@@ -2,9 +2,13 @@
 Tool d'exécution de code Python pour SARIEL.
 
 Phase 1 : isolation basique via un sous-processus séparé avec timeout.
-Ce n'est PAS une sandbox de sécurité complète (pas de conteneur, pas de
-restriction réseau/fichiers) — suffisant pour un usage personnel en local,
-à durcir si le projet évolue vers un usage multi-utilisateur (voir
+Phase 2 : ajout d'un filtre statique AST (tools/safety.py) qui bloque les
+imports et appels dangereux (os, subprocess, eval, etc.) AVANT tout
+lancement de sous-processus.
+Ce n'est toujours PAS une sandbox de sécurité complète (pas de conteneur,
+pas de restriction réseau/fichiers au niveau OS) — le filtre AST arrête
+les maladresses et l'injection grossière, pas un adversaire déterminé.
+À durcir si le projet évolue vers un usage multi-utilisateur (voir
 Suggestions & Optimisations).
 """
 
@@ -14,6 +18,7 @@ import tempfile
 import os
 
 from tools.base import Tool, ToolSchema, ToolResult, registry
+from tools.safety import static_code_check
 
 _TIMEOUT_SECONDS = 10
 
@@ -22,10 +27,19 @@ def python_exec(arguments: dict) -> ToolResult:
     """
     Exécute un extrait de code Python dans un sous-processus isolé et
     renvoie stdout (ou stderr en cas d'erreur du script lui-même).
+
+    Le code passe d'abord par le filtre statique (tools/safety.py) avant
+    tout lancement de sous-processus : un code refusé n'est JAMAIS exécuté,
+    même partiellement — voir tools/safety.py pour le raisonnement sur
+    ce choix (échec définitif plutôt que demande de confirmation).
     """
     code = arguments.get("code")
     if not code or not isinstance(code, str):
         return ToolResult.fail("Paramètre 'code' manquant ou invalide.")
+
+    allowed, reason = static_code_check(code)
+    if not allowed:
+        return ToolResult.fail(f"Code refusé par le filtre de sécurité : {reason}")
 
     # Fichier temporaire plutôt que `python -c` : évite les soucis
     # d'échappement avec du code multi-lignes ou contenant des guillemets.
