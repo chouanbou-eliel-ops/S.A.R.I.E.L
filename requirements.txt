@@ -4,6 +4,9 @@ anthropic>=0.40.0
 # Recherche web
 tavily-python>=0.5.0
 
+# Requêtes HTTP (Wikipedia, et futures API REST : GitHub, Telegram...)
+requests>=2.31.0
+
 # Chargement des variables d'environnement
 python-dotenv>=1.0.0
 
